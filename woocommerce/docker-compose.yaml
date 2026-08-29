@@ -1,0 +1,56 @@
+services:
+  wordpress:
+    build: .
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: woocommerce
+      WORDPRESS_URL: http://localhost:8080
+      WORDPRESS_TITLE: My WooCommerce Site
+      WORDPRESS_ADMIN_USER: storeadmin
+      WORDPRESS_ADMIN_PASSWORD: changeme123
+      WORDPRESS_ADMIN_EMAIL: admin@example.com
+      WOOCOMMERCE_STORE_COUNTRY: US:CA
+      WOOCOMMERCE_CURRENCY: USD
+      WOOCOMMERCE_GENERATE_DATA: "true"
+      PORT: "80"
+    volumes:
+      - wp-content:/var/www/html/wp-content
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - woocommerce
+
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: woocommerce
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - woocommerce
+
+networks:
+  woocommerce:
+    name: MyWooCommerce
+    driver: bridge
+
+volumes:
+  mysql-data:
+  wp-content:

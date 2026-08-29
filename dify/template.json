@@ -1,0 +1,520 @@
+{
+  "services": [
+    {
+      "name": "postgres",
+      "image": "postgres:15-alpine",
+      "variables": {
+        "POSTGRES_USER": {
+          "defaultValue": "postgres",
+          "description": "PostgreSQL superuser."
+        },
+        "POSTGRES_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "PostgreSQL password. Auto-generated; do not change after first deploy."
+        },
+        "POSTGRES_DB": {
+          "defaultValue": "dify",
+          "description": "Primary Dify database name."
+        },
+        "PGDATA": {
+          "defaultValue": "/var/lib/postgresql/data/pgdata",
+          "description": "PostgreSQL data directory inside the volume."
+        }
+      }
+    },
+    {
+      "name": "redis",
+      "image": "railwayapp/redis:8.2",
+      "variables": {
+        "REDIS_URL": {
+          "defaultValue": "redis://default:${{REDIS_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:6379",
+          "description": "Internal Redis connection URL."
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated Redis password."
+        }
+      }
+    },
+    {
+      "name": "weaviate",
+      "image": "semitechnologies/weaviate:1.27.0",
+      "variables": {
+        "PERSISTENCE_DATA_PATH": {
+          "defaultValue": "/var/lib/weaviate",
+          "description": "Weaviate data directory."
+        },
+        "AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED": {
+          "defaultValue": "true",
+          "description": "Allow anonymous Weaviate access on the private network."
+        },
+        "DEFAULT_VECTORIZER_MODULE": {
+          "defaultValue": "none",
+          "description": "Weaviate vectorizer module."
+        },
+        "AUTHENTICATION_APIKEY_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable Weaviate API key authentication."
+        },
+        "AUTHENTICATION_APIKEY_ALLOWED_KEYS": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Allowed Weaviate API keys."
+        }
+      }
+    },
+    {
+      "name": "minio",
+      "image": "minio/minio:latest",
+      "startCommand": "server /data --console-address \":9001\"",
+      "variables": {
+        "MINIO_ROOT_USER": {
+          "defaultValue": "${{secret(20, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "MinIO root access key."
+        },
+        "MINIO_ROOT_PASSWORD": {
+          "defaultValue": "${{secret(40, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "MinIO root secret key."
+        }
+      }
+    },
+    {
+      "name": "dify-api",
+      "image": "langgenius/dify-api:1.17.0",
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "PORT": {
+          "defaultValue": "5001",
+          "description": "Railway healthcheck port; must match DIFY_PORT."
+        },
+        "MODE": {
+          "defaultValue": "api",
+          "description": "Dify API process mode."
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{secret(42, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Application secret key. Do not change after first deploy."
+        },
+        "DB_HOST": {
+          "defaultValue": "${{postgres.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL hostname."
+        },
+        "DB_PORT": {
+          "defaultValue": "5432",
+          "description": "PostgreSQL port."
+        },
+        "DB_USERNAME": {
+          "defaultValue": "${{postgres.POSTGRES_USER}}",
+          "description": "PostgreSQL username."
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{postgres.POSTGRES_PASSWORD}}",
+          "description": "PostgreSQL password."
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{postgres.POSTGRES_DB}}",
+          "description": "Primary database name."
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{redis.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Redis hostname."
+        },
+        "REDIS_PORT": {
+          "defaultValue": "6379",
+          "description": "Redis port."
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{redis.REDIS_PASSWORD}}",
+          "description": "Redis password."
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "redis://:${{redis.REDIS_PASSWORD}}@${{redis.RAILWAY_PRIVATE_DOMAIN}}:6379/1",
+          "description": "Celery broker URL."
+        },
+        "CONSOLE_API_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public console API URL."
+        },
+        "APP_API_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public app API URL."
+        },
+        "FILES_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public file access URL."
+        },
+        "SERVER_CONSOLE_API_URL": {
+          "defaultValue": "http://${{dify-api.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "Internal console API URL."
+        },
+        "VECTOR_STORE": {
+          "defaultValue": "weaviate",
+          "description": "Vector database backend."
+        },
+        "WEAVIATE_ENDPOINT": {
+          "defaultValue": "http://${{weaviate.RAILWAY_PRIVATE_DOMAIN}}:8080",
+          "description": "Weaviate HTTP endpoint."
+        },
+        "WEAVIATE_API_KEY": {
+          "defaultValue": "${{weaviate.AUTHENTICATION_APIKEY_ALLOWED_KEYS}}",
+          "description": "Weaviate API key."
+        },
+        "STORAGE_TYPE": {
+          "defaultValue": "s3",
+          "description": "Storage backend: native S3 driver (auto-creates MinIO bucket)."
+        },
+        "S3_ENDPOINT": {
+          "defaultValue": "http://${{minio.RAILWAY_PRIVATE_DOMAIN}}:9000",
+          "description": "MinIO S3 endpoint."
+        },
+        "S3_REGION": {
+          "defaultValue": "us-east-1",
+          "description": "S3 region (required by boto3; use us-east-1 for MinIO)."
+        },
+        "S3_ADDRESS_STYLE": {
+          "defaultValue": "path",
+          "description": "S3 path-style URLs (required for MinIO)."
+        },
+        "S3_BUCKET_NAME": {
+          "defaultValue": "dify",
+          "description": "S3 bucket name."
+        },
+        "S3_ACCESS_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_USER}}",
+          "description": "MinIO access key."
+        },
+        "S3_SECRET_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_PASSWORD}}",
+          "description": "MinIO secret key."
+        },
+        "CODE_EXECUTION_ENDPOINT": {
+          "defaultValue": "http://${{sandbox.RAILWAY_PRIVATE_DOMAIN}}:8194",
+          "description": "Code sandbox endpoint."
+        },
+        "PLUGIN_DAEMON_URL": {
+          "defaultValue": "http://${{plugin-daemon.RAILWAY_PRIVATE_DOMAIN}}:5002",
+          "description": "Plugin daemon URL."
+        }
+      }
+    },
+    {
+      "name": "api-websocket",
+      "image": "langgenius/dify-api:1.17.0",
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "PORT": {
+          "defaultValue": "5001",
+          "description": "Railway healthcheck port; must match DIFY_PORT."
+        },
+        "MODE": {
+          "defaultValue": "api",
+          "description": "Dify API process mode (websocket)."
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{dify-api.SECRET_KEY}}",
+          "description": "Must match dify-api SECRET_KEY."
+        },
+        "DB_HOST": {
+          "defaultValue": "${{postgres.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL hostname."
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{postgres.POSTGRES_PASSWORD}}",
+          "description": "PostgreSQL password."
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{postgres.POSTGRES_DB}}",
+          "description": "Primary database name."
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{redis.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Redis hostname."
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{redis.REDIS_PASSWORD}}",
+          "description": "Redis password."
+        },
+        "SERVER_WORKER_CLASS": {
+          "defaultValue": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
+          "description": "Gunicorn worker class for WebSocket support."
+        }
+      }
+    },
+    {
+      "name": "worker",
+      "image": "langgenius/dify-api:1.17.0",
+      "variables": {
+        "MODE": {
+          "defaultValue": "worker",
+          "description": "Celery worker mode."
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{dify-api.SECRET_KEY}}",
+          "description": "Must match dify-api SECRET_KEY."
+        },
+        "DB_HOST": {
+          "defaultValue": "${{postgres.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL hostname."
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{postgres.POSTGRES_PASSWORD}}",
+          "description": "PostgreSQL password."
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{postgres.POSTGRES_DB}}",
+          "description": "Primary database name."
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{redis.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Redis hostname."
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{redis.REDIS_PASSWORD}}",
+          "description": "Redis password."
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "redis://:${{redis.REDIS_PASSWORD}}@${{redis.RAILWAY_PRIVATE_DOMAIN}}:6379/1",
+          "description": "Celery broker URL."
+        },
+        "WEAVIATE_ENDPOINT": {
+          "defaultValue": "http://${{weaviate.RAILWAY_PRIVATE_DOMAIN}}:8080",
+          "description": "Weaviate HTTP endpoint."
+        },
+        "S3_ENDPOINT": {
+          "defaultValue": "http://${{minio.RAILWAY_PRIVATE_DOMAIN}}:9000",
+          "description": "MinIO S3 endpoint."
+        },
+        "S3_ACCESS_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_USER}}",
+          "description": "MinIO access key."
+        },
+        "S3_SECRET_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_PASSWORD}}",
+          "description": "MinIO secret key."
+        }
+      }
+    },
+    {
+      "name": "worker-beat",
+      "image": "langgenius/dify-api:1.17.0",
+      "variables": {
+        "MODE": {
+          "defaultValue": "beat",
+          "description": "Celery beat scheduler mode."
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{dify-api.SECRET_KEY}}",
+          "description": "Must match dify-api SECRET_KEY."
+        },
+        "DB_HOST": {
+          "defaultValue": "${{postgres.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL hostname."
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{redis.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Redis hostname."
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "redis://:${{redis.REDIS_PASSWORD}}@${{redis.RAILWAY_PRIVATE_DOMAIN}}:6379/1",
+          "description": "Celery broker URL."
+        }
+      }
+    },
+    {
+      "name": "web",
+      "image": "langgenius/dify-web:1.17.0",
+      "variables": {
+        "CONSOLE_API_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public console API URL."
+        },
+        "APP_API_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public app API URL."
+        },
+        "SERVER_CONSOLE_API_URL": {
+          "defaultValue": "http://${{dify-api.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "Internal console API URL."
+        },
+        "NEXT_PUBLIC_SOCKET_URL": {
+          "defaultValue": "wss://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public WebSocket URL."
+        }
+      }
+    },
+    {
+      "name": "plugin-daemon",
+      "image": "langgenius/dify-plugin-daemon:0.6.10-local",
+      "variables": {
+        "DB_HOST": {
+          "defaultValue": "${{postgres.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL hostname."
+        },
+        "DB_DATABASE": {
+          "defaultValue": "dify_plugin",
+          "description": "Plugin daemon database name."
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{postgres.POSTGRES_PASSWORD}}",
+          "description": "PostgreSQL password."
+        },
+        "SERVER_PORT": {
+          "defaultValue": "5002",
+          "description": "Plugin daemon listen port."
+        },
+        "SERVER_KEY": {
+          "defaultValue": "${{secret(48, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=\")}}",
+          "description": "Plugin daemon server key."
+        },
+        "DIFY_INNER_API_URL": {
+          "defaultValue": "http://${{dify-api.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "Internal Dify API URL."
+        }
+      }
+    },
+    {
+      "name": "ssrf-proxy",
+      "variables": {
+        "HTTP_PORT": {
+          "defaultValue": "3128",
+          "description": "Squid HTTP proxy port."
+        },
+        "SSRF_SANDBOX_PROXY_HOST": {
+          "defaultValue": "${{sandbox.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Sandbox host for Squid reverse proxy bridge."
+        },
+        "SANDBOX_PORT": {
+          "defaultValue": "8194",
+          "description": "Sandbox listen port."
+        }
+      }
+    },
+    {
+      "name": "agent-ssrf-proxy",
+      "variables": {
+        "HTTP_PORT": {
+          "defaultValue": "3128",
+          "description": "Squid HTTP proxy port."
+        },
+        "AGENT_BACKEND_HOST": {
+          "defaultValue": "${{agent-backend.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Agent backend hostname for SSRF allowlist."
+        },
+        "API_HOST": {
+          "defaultValue": "${{dify-api.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "API hostname for SSRF allowlist (/files/*)."
+        }
+      }
+    },
+    {
+      "name": "agent-backend",
+      "image": "langgenius/dify-agent-backend:1.17.0",
+      "variables": {
+        "DIFY_AGENT_PLUGIN_DAEMON_URL": {
+          "defaultValue": "http://${{plugin-daemon.RAILWAY_PRIVATE_DOMAIN}}:5002",
+          "description": "Plugin daemon URL for agent backend."
+        },
+        "DIFY_AGENT_INNER_API_URL": {
+          "defaultValue": "http://${{dify-api.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "Internal Dify API URL for agent backend."
+        },
+        "DIFY_AGENT_RUNTIME_BACKEND": {
+          "defaultValue": "local",
+          "description": "Agent runtime backend."
+        },
+        "DIFY_AGENT_LOCAL_SANDBOX_ENDPOINT": {
+          "defaultValue": "http://${{local-sandbox.RAILWAY_PRIVATE_DOMAIN}}:5004",
+          "description": "Local sandbox endpoint."
+        }
+      }
+    },
+    {
+      "name": "local-sandbox",
+      "image": "langgenius/dify-agent-local-sandbox:1.17.0",
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "PORT": {
+          "defaultValue": "5004",
+          "description": "Railway healthcheck port; must match shellctl listen port."
+        },
+        "HTTP_PROXY": {
+          "defaultValue": "http://${{agent-ssrf-proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "HTTP proxy for local sandbox egress."
+        },
+        "HTTPS_PROXY": {
+          "defaultValue": "http://${{agent-ssrf-proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "HTTPS proxy for local sandbox egress."
+        },
+        "NO_PROXY": {
+          "defaultValue": "localhost,127.0.0.1",
+          "description": "Hosts bypassing the SSRF proxy."
+        }
+      }
+    },
+    {
+      "name": "sandbox",
+      "image": "langgenius/dify-sandbox:0.2.15",
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "PORT": {
+          "defaultValue": "8194",
+          "description": "Railway healthcheck port; must match SANDBOX_PORT."
+        },
+        "API_KEY": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Sandbox API key."
+        },
+        "ENABLE_NETWORK": {
+          "defaultValue": "true",
+          "description": "Allow sandbox network via SSRF proxy."
+        },
+        "HTTP_PROXY": {
+          "defaultValue": "http://${{ssrf-proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "HTTP proxy for sandbox egress."
+        },
+        "HTTPS_PROXY": {
+          "defaultValue": "http://${{ssrf-proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "HTTPS proxy for sandbox egress."
+        }
+      }
+    },
+    {
+      "name": "nginx",
+      "healthcheckPath": "/nginx-health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "PORT": {
+          "defaultValue": "",
+          "description": "HTTP listen port. Set automatically by Railway."
+        },
+        "API_HOST": {
+          "defaultValue": "${{dify-api.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for Dify API."
+        },
+        "API_PORT": {
+          "defaultValue": "5001",
+          "description": "Dify API private port."
+        },
+        "WEB_HOST": {
+          "defaultValue": "${{web.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for Dify Web."
+        },
+        "WEB_PORT": {
+          "defaultValue": "8080",
+          "description": "Dify Web private port (Railway PORT)."
+        },
+        "API_WEBSOCKET_HOST": {
+          "defaultValue": "${{api-websocket.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for API WebSocket."
+        },
+        "PLUGIN_DAEMON_HOST": {
+          "defaultValue": "${{plugin-daemon.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for plugin daemon."
+        }
+      }
+    }
+  ]
+}

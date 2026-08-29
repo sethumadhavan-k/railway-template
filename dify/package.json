@@ -1,0 +1,15 @@
+{
+  "name": "dify",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "plan": "RAILWAY_IAC_TS_BIN=\"../node_modules/.bin/railway-iac-ts\" PATH=\"../node_modules/.bin:$PATH\" railway config plan",
+    "apply": "RAILWAY_IAC_TS_BIN=\"../node_modules/.bin/railway-iac-ts\" PATH=\"../node_modules/.bin:$PATH\" railway config apply",
+    "apply:yes": "RAILWAY_IAC_TS_BIN=\"../node_modules/.bin/railway-iac-ts\" PATH=\"../node_modules/.bin:$PATH\" railway config apply --yes --confirm-destructive",
+    "pull": "RAILWAY_IAC_TS_BIN=\"../node_modules/.bin/railway-iac-ts\" PATH=\"../node_modules/.bin:$PATH\" railway config pull"
+  },
+  "devDependencies": {
+    "railway": "^3.7.0",
+    "typescript": "^5.9.2"
+  }
+}

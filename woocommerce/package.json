@@ -1,0 +1,11 @@
+{
+  "name": "woocommerce",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "plan": "railway config plan",
+    "apply": "railway config apply",
+    "apply:yes": "railway config apply --yes --confirm-destructive",
+    "pull": "railway config pull"
+  }
+}

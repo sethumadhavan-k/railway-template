@@ -1,0 +1,466 @@
+{
+  "services": [
+    {
+      "name": "postgres",
+      "image": "pgvector/pgvector:pg16",
+      "variables": {
+        "POSTGRES_USER": {
+          "defaultValue": "postgres",
+          "description": "PostgreSQL username for AppFlowy and GoTrue."
+        },
+        "POSTGRES_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "PostgreSQL password. Auto-generated; do not change after first deploy."
+        },
+        "POSTGRES_DB": {
+          "defaultValue": "postgres",
+          "description": "PostgreSQL database name."
+        },
+        "PGDATA": {
+          "defaultValue": "/var/lib/postgresql/data/pgdata",
+          "description": "PostgreSQL data directory inside the volume."
+        }
+      }
+    },
+    {
+      "name": "redis",
+      "image": "railwayapp/redis:8.2",
+      "variables": {
+        "REDIS_URL": {
+          "defaultValue": "redis://default:${{REDIS_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:6379",
+          "description": "Internal Redis connection URL."
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated Redis password."
+        }
+      }
+    },
+    {
+      "name": "minio",
+      "image": "minio/minio:latest",
+      "startCommand": "server /data --console-address \":9001\"",
+      "variables": {
+        "MINIO_ROOT_USER": {
+          "defaultValue": "${{secret(20, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "MinIO root access key."
+        },
+        "MINIO_ROOT_PASSWORD": {
+          "defaultValue": "${{secret(40, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "MinIO root secret key."
+        },
+        "MINIO_BROWSER_REDIRECT_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}/minio",
+          "description": "MinIO console redirect URL via nginx."
+        }
+      }
+    },
+    {
+      "name": "gotrue",
+      "image": "appflowyinc/gotrue:latest",
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "GOTRUE_ADMIN_EMAIL": {
+          "defaultValue": "admin@example.com",
+          "description": "Initial GoTrue admin email for /console."
+        },
+        "GOTRUE_ADMIN_PASSWORD": {
+          "defaultValue": "${{secret(24, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Initial GoTrue admin password. Save this."
+        },
+        "GOTRUE_DISABLE_SIGNUP": {
+          "defaultValue": "false",
+          "description": "When true, only invites can create accounts."
+        },
+        "GOTRUE_SITE_URL": {
+          "defaultValue": "appflowy-flutter://",
+          "description": "Deep-link URL for AppFlowy clients."
+        },
+        "GOTRUE_URI_ALLOW_LIST": {
+          "defaultValue": "**",
+          "description": "Allowed redirect URI patterns."
+        },
+        "GOTRUE_JWT_SECRET": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "JWT signing secret. Do not change after first deploy."
+        },
+        "GOTRUE_JWT_EXP": {
+          "defaultValue": "604800",
+          "description": "JWT expiration in seconds."
+        },
+        "GOTRUE_JWT_ADMIN_GROUP_NAME": {
+          "defaultValue": "supabase_admin",
+          "description": "JWT admin group name."
+        },
+        "GOTRUE_DB_DRIVER": {
+          "defaultValue": "postgres",
+          "description": "GoTrue database driver."
+        },
+        "API_EXTERNAL_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}/gotrue",
+          "description": "Public GoTrue URL via nginx."
+        },
+        "DATABASE_URL": {
+          "defaultValue": "postgres://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}?search_path=auth",
+          "description": "GoTrue Postgres URL (auth schema)."
+        },
+        "PORT": {
+          "defaultValue": "9999",
+          "description": "GoTrue listen port."
+        },
+        "GOTRUE_MAILER_AUTOCONFIRM": {
+          "defaultValue": "true",
+          "description": "Auto-confirm signups when SMTP is not configured."
+        }
+      }
+    },
+    {
+      "name": "appflowy-cloud",
+      "image": "appflowyinc/appflowy_cloud:latest",
+      "healthcheckPath": "/api/health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "RUST_LOG": {
+          "defaultValue": "info",
+          "description": "Log level."
+        },
+        "APPFLOWY_ENVIRONMENT": {
+          "defaultValue": "production",
+          "description": "Runtime environment."
+        },
+        "APPFLOWY_DATABASE_URL": {
+          "defaultValue": "postgres://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}",
+          "description": "Postgres connection URL."
+        },
+        "APPFLOWY_REDIS_URI": {
+          "defaultValue": "${{redis.REDIS_URL}}",
+          "description": "Redis connection URL."
+        },
+        "APPFLOWY_GOTRUE_JWT_SECRET": {
+          "defaultValue": "${{gotrue.GOTRUE_JWT_SECRET}}",
+          "description": "Must match GoTrue JWT secret."
+        },
+        "APPFLOWY_GOTRUE_BASE_URL": {
+          "defaultValue": "http://${{gotrue.RAILWAY_PRIVATE_DOMAIN}}:9999",
+          "description": "Internal GoTrue URL."
+        },
+        "APPFLOWY_S3_CREATE_BUCKET": {
+          "defaultValue": "true",
+          "description": "Create bucket on startup if missing."
+        },
+        "APPFLOWY_S3_USE_MINIO": {
+          "defaultValue": "true",
+          "description": "Use MinIO for file storage."
+        },
+        "APPFLOWY_S3_MINIO_URL": {
+          "defaultValue": "http://${{minio.RAILWAY_PRIVATE_DOMAIN}}:9000",
+          "description": "Internal MinIO API URL."
+        },
+        "APPFLOWY_S3_ACCESS_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_USER}}",
+          "description": "S3/MinIO access key."
+        },
+        "APPFLOWY_S3_SECRET_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_PASSWORD}}",
+          "description": "S3/MinIO secret key."
+        },
+        "APPFLOWY_S3_BUCKET": {
+          "defaultValue": "appflowy",
+          "description": "Object storage bucket name."
+        },
+        "APPFLOWY_S3_PRESIGNED_URL_ENDPOINT": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}/minio-api",
+          "description": "Public MinIO API path for presigned uploads."
+        },
+        "APPFLOWY_ACCESS_CONTROL": {
+          "defaultValue": "true",
+          "description": "Enable access control."
+        },
+        "APPFLOWY_DATABASE_MAX_CONNECTIONS": {
+          "defaultValue": "40",
+          "description": "Max Postgres connections."
+        },
+        "AI_SERVER_HOST": {
+          "defaultValue": "${{appflowy-ai.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Internal AI hostname."
+        },
+        "AI_SERVER_PORT": {
+          "defaultValue": "5001",
+          "description": "AI listen port."
+        },
+        "AI_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable AI integration."
+        },
+        "APPFLOWY_WEB_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public AppFlowy Web URL."
+        },
+        "APPFLOWY_BASE_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public base URL."
+        },
+        "APPFLOWY_SEARCH_SERVICE_URL": {
+          "defaultValue": "http://${{appflowy-search.RAILWAY_PRIVATE_DOMAIN}}:4002",
+          "description": "Internal search service URL."
+        }
+      }
+    },
+    {
+      "name": "admin-frontend",
+      "image": "appflowyinc/admin_frontend:latest",
+      "variables": {
+        "APPFLOWY_GOTRUE_BASE_URL": {
+          "defaultValue": "http://${{gotrue.RAILWAY_PRIVATE_DOMAIN}}:9999",
+          "description": "Internal GoTrue URL."
+        },
+        "APPFLOWY_BASE_URL": {
+          "defaultValue": "http://${{appflowy-cloud.RAILWAY_PRIVATE_DOMAIN}}:8000",
+          "description": "Internal AppFlowy Cloud URL."
+        }
+      }
+    },
+    {
+      "name": "appflowy-web",
+      "image": "appflowyinc/appflowy_web:latest",
+      "variables": {
+        "APPFLOWY_BASE_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public base URL for the web client."
+        },
+        "APPFLOWY_GOTRUE_BASE_URL": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}/gotrue",
+          "description": "Public GoTrue URL."
+        },
+        "APPFLOWY_WS_BASE_URL": {
+          "defaultValue": "wss://${{nginx.RAILWAY_PUBLIC_DOMAIN}}/ws/v2",
+          "description": "Public WebSocket URL."
+        }
+      }
+    },
+    {
+      "name": "appflowy-worker",
+      "image": "appflowyinc/appflowy_worker:latest",
+      "variables": {
+        "RUST_LOG": {
+          "defaultValue": "info",
+          "description": "Log level."
+        },
+        "APPFLOWY_ENVIRONMENT": {
+          "defaultValue": "production",
+          "description": "Worker environment."
+        },
+        "APPFLOWY_WORKER_REDIS_URL": {
+          "defaultValue": "${{redis.REDIS_URL}}",
+          "description": "Redis URL for jobs."
+        },
+        "APPFLOWY_WORKER_ENVIRONMENT": {
+          "defaultValue": "production",
+          "description": "Worker environment flag."
+        },
+        "APPFLOWY_WORKER_DATABASE_URL": {
+          "defaultValue": "postgres://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}",
+          "description": "Postgres URL for the worker."
+        },
+        "APPFLOWY_WORKER_DATABASE_NAME": {
+          "defaultValue": "${{postgres.POSTGRES_DB}}",
+          "description": "Postgres database name."
+        },
+        "APPFLOWY_S3_USE_MINIO": {
+          "defaultValue": "true",
+          "description": "Use MinIO for worker storage."
+        },
+        "APPFLOWY_S3_MINIO_URL": {
+          "defaultValue": "http://${{minio.RAILWAY_PRIVATE_DOMAIN}}:9000",
+          "description": "Internal MinIO API URL."
+        },
+        "APPFLOWY_S3_ACCESS_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_USER}}",
+          "description": "S3/MinIO access key."
+        },
+        "APPFLOWY_S3_SECRET_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_PASSWORD}}",
+          "description": "S3/MinIO secret key."
+        },
+        "APPFLOWY_S3_BUCKET": {
+          "defaultValue": "appflowy",
+          "description": "Object storage bucket name."
+        }
+      }
+    },
+    {
+      "name": "appflowy-ai",
+      "image": "appflowyinc/appflowy_ai:latest",
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "AI_SERVER_PORT": {
+          "defaultValue": "5001",
+          "description": "AI service listen port."
+        },
+        "OPENAI_API_KEY": {
+          "defaultValue": "",
+          "description": "Optional OpenAI API key for AI features."
+        },
+        "DEFAULT_AI_MODEL": {
+          "defaultValue": "gpt-4.1-mini",
+          "description": "Default OpenAI chat model."
+        },
+        "AI_DATABASE_URL": {
+          "defaultValue": "postgres://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}",
+          "description": "Postgres URL for AI."
+        },
+        "AI_REDIS_URL": {
+          "defaultValue": "${{redis.REDIS_URL}}",
+          "description": "Redis URL for AI."
+        },
+        "AI_USE_MINIO": {
+          "defaultValue": "true",
+          "description": "Use MinIO for AI storage."
+        },
+        "AI_MINIO_URL": {
+          "defaultValue": "http://${{minio.RAILWAY_PRIVATE_DOMAIN}}:9000",
+          "description": "Internal MinIO API URL."
+        },
+        "AI_APPFLOWY_HOST": {
+          "defaultValue": "https://${{nginx.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public AppFlowy base URL."
+        },
+        "APPFLOWY_S3_ACCESS_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_USER}}",
+          "description": "S3/MinIO access key."
+        },
+        "APPFLOWY_S3_SECRET_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_PASSWORD}}",
+          "description": "S3/MinIO secret key."
+        },
+        "APPFLOWY_S3_BUCKET": {
+          "defaultValue": "appflowy",
+          "description": "Object storage bucket name."
+        },
+        "APPFLOWY_GOTRUE_JWT_SECRET": {
+          "defaultValue": "${{gotrue.GOTRUE_JWT_SECRET}}",
+          "description": "Must match GoTrue JWT secret."
+        }
+      }
+    },
+    {
+      "name": "appflowy-search",
+      "image": "appflowyinc/appflowy_search:latest",
+      "variables": {
+        "RUST_LOG": {
+          "defaultValue": "info",
+          "description": "Log level."
+        },
+        "APPFLOWY_SEARCH_HOST": {
+          "defaultValue": "[::]",
+          "description": "Search bind address (dual-stack)."
+        },
+        "APPFLOWY_SEARCH_PORT": {
+          "defaultValue": "4002",
+          "description": "Search listen port."
+        },
+        "APPFLOWY_SEARCH_DATABASE_URL": {
+          "defaultValue": "postgres://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}",
+          "description": "Postgres URL for search."
+        },
+        "APPFLOWY_SEARCH_REDIS_URL": {
+          "defaultValue": "${{redis.REDIS_URL}}",
+          "description": "Redis URL for search."
+        },
+        "APPFLOWY_S3_USE_MINIO": {
+          "defaultValue": "true",
+          "description": "Use MinIO for collab blobs."
+        },
+        "APPFLOWY_S3_MINIO_URL": {
+          "defaultValue": "http://${{minio.RAILWAY_PRIVATE_DOMAIN}}:9000",
+          "description": "Internal MinIO API URL."
+        },
+        "APPFLOWY_S3_ACCESS_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_USER}}",
+          "description": "S3/MinIO access key."
+        },
+        "APPFLOWY_S3_SECRET_KEY": {
+          "defaultValue": "${{minio.MINIO_ROOT_PASSWORD}}",
+          "description": "S3/MinIO secret key."
+        },
+        "APPFLOWY_S3_BUCKET": {
+          "defaultValue": "appflowy",
+          "description": "Object storage bucket name."
+        },
+        "APPFLOWY_BACKGROUND_INDEXER_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable background indexing."
+        },
+        "APPFLOWY_KEYWORD_SEARCH_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable keyword search."
+        },
+        "APPFLOWY_KEYWORD_INDEX_DIR": {
+          "defaultValue": "/var/lib/appflowy/keyword_index",
+          "description": "Persistent keyword index directory."
+        },
+        "APPFLOWY_GOTRUE_JWT_SECRET": {
+          "defaultValue": "${{gotrue.GOTRUE_JWT_SECRET}}",
+          "description": "Must match GoTrue JWT secret."
+        }
+      }
+    },
+    {
+      "name": "nginx",
+      "healthcheckPath": "/nginx-health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "PORT": {
+          "defaultValue": "",
+          "description": "HTTP listen port. Set automatically by Railway."
+        },
+        "APPFLOWY_CLOUD_HOST": {
+          "defaultValue": "${{appflowy-cloud.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for AppFlowy Cloud."
+        },
+        "APPFLOWY_CLOUD_PORT": {
+          "defaultValue": "8000",
+          "description": "AppFlowy Cloud private port."
+        },
+        "GOTRUE_HOST": {
+          "defaultValue": "${{gotrue.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for GoTrue."
+        },
+        "GOTRUE_PORT": {
+          "defaultValue": "9999",
+          "description": "GoTrue private port."
+        },
+        "ADMIN_FRONTEND_HOST": {
+          "defaultValue": "${{admin-frontend.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for Admin Frontend."
+        },
+        "ADMIN_FRONTEND_PORT": {
+          "defaultValue": "3000",
+          "description": "Admin Frontend private port."
+        },
+        "APPFLOWY_WEB_HOST": {
+          "defaultValue": "${{appflowy-web.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for AppFlowy Web."
+        },
+        "APPFLOWY_WEB_PORT": {
+          "defaultValue": "80",
+          "description": "AppFlowy Web private port."
+        },
+        "MINIO_HOST": {
+          "defaultValue": "${{minio.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private hostname for MinIO."
+        },
+        "MINIO_API_PORT": {
+          "defaultValue": "9000",
+          "description": "MinIO API private port."
+        },
+        "MINIO_CONSOLE_PORT": {
+          "defaultValue": "9001",
+          "description": "MinIO console private port."
+        }
+      }
+    }
+  ]
+}

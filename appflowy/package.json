@@ -1,0 +1,15 @@
+{
+  "name": "appflowy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "plan": "PATH=\"../../node_modules/.bin:$PATH\" railway config plan",
+    "apply": "PATH=\"../../node_modules/.bin:$PATH\" railway config apply",
+    "apply:yes": "PATH=\"../../node_modules/.bin:$PATH\" railway config apply --yes --confirm-destructive",
+    "pull": "PATH=\"../../node_modules/.bin:$PATH\" railway config pull"
+  },
+  "devDependencies": {
+    "railway": "^3.7.0",
+    "typescript": "^5.9.2"
+  }
+}

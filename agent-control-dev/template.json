@@ -1,0 +1,106 @@
+{
+  "services": [
+    {
+      "name": "postgres",
+      "image": "ghcr.io/railwayapp-templates/postgres-ssl:18",
+      "variables": {
+        "PGDATA": {
+          "defaultValue": "/var/lib/postgresql/data/pgdata",
+          "description": "Filesystem path where PostgreSQL stores its data files."
+        },
+        "PGHOST": {
+          "defaultValue": "${{RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL server hostname on the private network."
+        },
+        "PGPORT": {
+          "defaultValue": "5432",
+          "description": "PostgreSQL server port."
+        },
+        "PGUSER": {
+          "defaultValue": "${{POSTGRES_USER}}",
+          "description": "PostgreSQL username used in connection strings."
+        },
+        "PGDATABASE": {
+          "defaultValue": "${{POSTGRES_DB}}",
+          "description": "PostgreSQL database name used in connection strings."
+        },
+        "PGPASSWORD": {
+          "defaultValue": "${{POSTGRES_PASSWORD}}",
+          "description": "PostgreSQL password used in connection strings."
+        },
+        "POSTGRES_DB": {
+          "defaultValue": "agent_control",
+          "description": "Default database name created on initialization."
+        },
+        "DATABASE_URL": {
+          "defaultValue": "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}",
+          "description": "Internal PostgreSQL connection URL for service-to-service communication."
+        },
+        "POSTGRES_USER": {
+          "defaultValue": "agent_control",
+          "description": "PostgreSQL username."
+        },
+        "SSL_CERT_DAYS": {
+          "defaultValue": "820",
+          "description": "Number of days until the auto-generated SSL certificate expires."
+        },
+        "POSTGRES_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated PostgreSQL password."
+        },
+        "DATABASE_PUBLIC_URL": {
+          "defaultValue": "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_TCP_PROXY_DOMAIN}}:${{RAILWAY_TCP_PROXY_PORT}}/${{PGDATABASE}}",
+          "description": "Public PostgreSQL connection URL via TCP proxy for external access."
+        },
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS": {
+          "defaultValue": "60",
+          "description": "Seconds to wait before stopping the previous deployment during a rollout."
+        }
+      }
+    },
+    {
+      "name": "server",
+      "image": "galileoai/agent-control-server:latest",
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 300,
+      "variables": {
+        "AGENT_CONTROL_DB_URL": {
+          "defaultValue": "postgresql+psycopg://${{postgres.PGUSER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.PGDATABASE}}",
+          "description": "PostgreSQL connection URL with psycopg driver. References the managed postgres service."
+        },
+        "AGENT_CONTROL_HOST": {
+          "defaultValue": "0.0.0.0",
+          "description": "Server bind address."
+        },
+        "AGENT_CONTROL_PORT": {
+          "defaultValue": "${{PORT}}",
+          "description": "Server listen port. Uses Railway-assigned PORT for external routing."
+        },
+        "AGENT_CONTROL_API_KEY_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable API key authentication. Should remain enabled in production."
+        },
+        "AGENT_CONTROL_API_KEYS": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated API key for runtime and read access. Save this value for SDK and API clients."
+        },
+        "AGENT_CONTROL_ADMIN_API_KEYS": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated admin API key for control-plane mutations and UI login. Save this value."
+        },
+        "AGENT_CONTROL_SESSION_SECRET": {
+          "defaultValue": "${{secret(64, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Secret for session encryption. Auto-generated; do not change after first deploy."
+        },
+        "AGENT_CONTROL_CORS_ORIGINS": {
+          "defaultValue": "https://${{server.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Allowed CORS origins for the bundled dashboard served from the server public domain. Generate a public domain on the server service before first use."
+        },
+        "GALILEO_API_KEY": {
+          "defaultValue": "",
+          "description": "Optional Galileo API key for the Luna-2 AI evaluator."
+        }
+      }
+    }
+  ]
+}

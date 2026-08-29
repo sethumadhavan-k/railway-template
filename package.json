@@ -1,0 +1,16 @@
+{
+  "name": "railway-template",
+  "private": true,
+  "workspaces": [
+    "agent-control-dev",
+    "outline",
+    "affine",
+    "evershop",
+    "woocommerce",
+    "appflowy",
+    "dify"
+  ],
+  "devDependencies": {
+    "railway": "^3.7.0"
+  }
+}

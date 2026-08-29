@@ -1,0 +1,59 @@
+services:
+  app:
+    # Build from local Dockerfile so .evershop/build assets exist.
+    # evershop/evershop:latest does not ship adminLogin/client/index.json.
+    build: .
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: database
+      # Container port 5432 — not the host publish port (5436)
+      DB_PORT: 5432
+      DB_PASSWORD: postgres
+      DB_USER: postgres
+      DB_NAME: postgres
+      DB_SSLMODE: disable
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: changeme123
+      ADMIN_NAME: Admin
+      SEED_DEMO_DATA: "true"
+      SHOP_HOME_URL: http://localhost:3003
+    volumes:
+      - evershop-media:/app/media
+    networks:
+      - myevershop
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - 3003:3000
+
+  database:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      # host:container — host can use 5436; containers must use 5432
+      - "5436:5432"
+    networks:
+      - myevershop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  myevershop:
+    name: MyEverShop
+    driver: bridge
+
+volumes:
+  postgres-data:
+  evershop-media:

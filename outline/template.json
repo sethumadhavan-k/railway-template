@@ -1,0 +1,204 @@
+{
+  "services": [
+    {
+      "name": "postgres",
+      "image": "ghcr.io/railwayapp-templates/postgres-ssl:18",
+      "variables": {
+        "PGDATA": {
+          "defaultValue": "/var/lib/postgresql/data/pgdata",
+          "description": "Filesystem path where PostgreSQL stores its data files."
+        },
+        "PGHOST": {
+          "defaultValue": "${{RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "PostgreSQL server hostname on the private network."
+        },
+        "PGPORT": {
+          "defaultValue": "5432",
+          "description": "PostgreSQL server port."
+        },
+        "PGUSER": {
+          "defaultValue": "${{POSTGRES_USER}}",
+          "description": "PostgreSQL username used in connection strings."
+        },
+        "PGDATABASE": {
+          "defaultValue": "${{POSTGRES_DB}}",
+          "description": "PostgreSQL database name used in connection strings."
+        },
+        "PGPASSWORD": {
+          "defaultValue": "${{POSTGRES_PASSWORD}}",
+          "description": "PostgreSQL password used in connection strings."
+        },
+        "POSTGRES_DB": {
+          "defaultValue": "railway",
+          "description": "Default database name created on initialization."
+        },
+        "DATABASE_URL": {
+          "defaultValue": "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}",
+          "description": "Internal PostgreSQL connection URL for service-to-service communication."
+        },
+        "POSTGRES_USER": {
+          "defaultValue": "postgres",
+          "description": "PostgreSQL superuser username."
+        },
+        "SSL_CERT_DAYS": {
+          "defaultValue": "820",
+          "description": "Number of days until the auto-generated SSL certificate expires."
+        },
+        "POSTGRES_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated PostgreSQL password."
+        },
+        "DATABASE_PUBLIC_URL": {
+          "defaultValue": "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_TCP_PROXY_DOMAIN}}:${{RAILWAY_TCP_PROXY_PORT}}/${{PGDATABASE}}",
+          "description": "Public PostgreSQL connection URL via TCP proxy for external access."
+        },
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS": {
+          "defaultValue": "60",
+          "description": "Seconds to wait before stopping the previous deployment during a rollout."
+        }
+      }
+    },
+    {
+      "name": "redis",
+      "image": "railwayapp/redis:8.2",
+      "variables": {
+        "REDISHOST": {
+          "defaultValue": "${{RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Redis server hostname on the private network."
+        },
+        "REDISPORT": {
+          "defaultValue": "6379",
+          "description": "Redis server port."
+        },
+        "REDISUSER": {
+          "defaultValue": "default",
+          "description": "Redis username for authentication."
+        },
+        "REDIS_URL": {
+          "defaultValue": "redis://default:${{REDIS_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:6379",
+          "description": "Internal Redis connection URL for service-to-service communication."
+        },
+        "REDISPASSWORD": {
+          "defaultValue": "${{REDIS_PASSWORD}}",
+          "description": "Redis password (alias of REDIS_PASSWORD)."
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")}}",
+          "description": "Auto-generated Redis password."
+        },
+        "REDIS_PUBLIC_URL": {
+          "defaultValue": "redis://default:${{REDIS_PASSWORD}}@${{RAILWAY_TCP_PROXY_DOMAIN}}:${{RAILWAY_TCP_PROXY_PORT}}",
+          "description": "Public Redis connection URL via TCP proxy for external access."
+        }
+      }
+    },
+    {
+      "name": "outline",
+      "image": "outlinewiki/outline:latest",
+      "healthcheckPath": "/_health",
+      "healthcheckTimeout": 600,
+      "variables": {
+        "NODE_ENV": {
+          "defaultValue": "production",
+          "description": "Node.js runtime environment. Use production for deployed instances."
+        },
+        "NODE_OPTIONS": {
+          "defaultValue": "--no-experimental-webstorage",
+          "description": "Node.js runtime flags. Suppresses localStorage warnings on newer Node versions."
+        },
+        "DATABASE_URL": {
+          "defaultValue": "${{postgres.DATABASE_URL}}",
+          "description": "PostgreSQL connection URL. References the managed postgres service."
+        },
+        "REDIS_URL": {
+          "defaultValue": "${{redis.REDIS_URL}}",
+          "description": "Redis connection URL. References the managed redis service."
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{secret(64, \"abcdef0123456789\")}}",
+          "description": "Secret key for encrypting sessions and cookies. Auto-generated; do not change after first deploy."
+        },
+        "UTILS_SECRET": {
+          "defaultValue": "${{secret(64, \"abcdef0123456789\")}}",
+          "description": "Secret used for utility operations and background tasks. Auto-generated; do not change after first deploy."
+        },
+        "URL": {
+          "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public URL of your Outline instance. Uses the Railway-generated domain."
+        },
+        "PORT": {
+          "defaultValue": "",
+          "description": "HTTP port for the Outline web server. Set automatically by Railway."
+        },
+        "FORCE_HTTPS": {
+          "defaultValue": "true",
+          "description": "Redirect HTTP requests to HTTPS. Should remain enabled in production."
+        },
+        "FILE_STORAGE": {
+          "defaultValue": "local",
+          "description": "File storage backend. Use local storage with the attached volume."
+        },
+        "FILE_STORAGE_LOCAL_ROOT_DIR": {
+          "defaultValue": "/var/lib/outline/data",
+          "description": "Directory path for locally stored uploads and attachments."
+        },
+        "DEFAULT_LANGUAGE": {
+          "defaultValue": "en_US",
+          "description": "Default language for the Outline user interface."
+        },
+        "GOOGLE_CLIENT_ID": {
+          "defaultValue": "",
+          "description": "Google OAuth client ID. Required for sign-in. See https://docs.getoutline.com/s/hosting/doc/google-hOuvtCmTqQ"
+        },
+        "GOOGLE_CLIENT_SECRET": {
+          "defaultValue": "",
+          "description": "Google OAuth client secret. Required for sign-in."
+        },
+        "SMTP_SERVICE": {
+          "defaultValue": "",
+          "description": "SMTP service for transactional emails (optional). See https://docs.getoutline.com/s/hosting/doc/smtp-cqCJyZGMIB"
+        },
+        "SMTP_USERNAME": {
+          "defaultValue": "",
+          "description": "SMTP username (optional)."
+        },
+        "SMTP_PASSWORD": {
+          "defaultValue": "",
+          "description": "SMTP password (optional)."
+        },
+        "SMTP_FROM_EMAIL": {
+          "defaultValue": "",
+          "description": "From address for outgoing emails (optional)."
+        },
+        "OIDC_CLIENT_ID": {
+          "defaultValue": "",
+          "description": "OpenID Connect client ID (optional alternative auth). See https://docs.getoutline.com/s/hosting/doc/oidc-8CPBm6uC0I"
+        },
+        "OIDC_CLIENT_SECRET": {
+          "defaultValue": "",
+          "description": "OpenID Connect client secret (optional)."
+        },
+        "OIDC_AUTH_URI": {
+          "defaultValue": "",
+          "description": "OpenID Connect authorization endpoint (optional)."
+        },
+        "OIDC_TOKEN_URI": {
+          "defaultValue": "",
+          "description": "OpenID Connect token endpoint (optional)."
+        },
+        "OIDC_USERINFO_URI": {
+          "defaultValue": "",
+          "description": "OpenID Connect userinfo endpoint (optional)."
+        },
+        "SLACK_CLIENT_ID": {
+          "defaultValue": "",
+          "description": "Slack OAuth client ID (optional alternative auth). See https://docs.getoutline.com/s/hosting/doc/slack-sgMujR8J9J"
+        },
+        "SLACK_CLIENT_SECRET": {
+          "defaultValue": "",
+          "description": "Slack OAuth client secret (optional)."
+        }
+      }
+    }
+  ]
+}

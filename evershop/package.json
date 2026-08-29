@@ -1,0 +1,22 @@
+{
+  "name": "evershop",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "evershop build",
+    "start": "evershop start",
+    "plan": "railway config plan",
+    "apply": "railway config apply",
+    "apply:yes": "railway config apply --yes --confirm-destructive",
+    "pull": "railway config pull"
+  },
+  "dependencies": {
+    "@evershop/evershop": "^2.1.1",
+    "@evershop/sendgrid": "^2.1.1",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.13.1"
+  },
+  "overrides": {
+    "webpack": "5.105.4"
+  }
+}
