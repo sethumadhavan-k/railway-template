@@ -37,7 +37,7 @@ After deploy:
 
 Railway cannot generate a template from services deployed with `railway up` (empty source). The custom **nginx**, **ssrf-proxy**, and **agent-ssrf-proxy** services must be connected to a **GitHub repo** before running `railway templates create`:
 
-1. Push this monorepo to GitHub (default IaC repo: `sethumadhavan/railway-template`). Override with `RAILWAY_TEMPLATE_REPO=owner/repo` when applying IaC.
+1. Push this monorepo to GitHub (default IaC repo: `sethumadhavan-k/railway-template`). Override with `RAILWAY_TEMPLATE_REPO=owner/repo` when applying IaC.
 2. Connect the repo to your Railway project (GitHub App access required).
 3. From `dify/`, run `npm run plan` then `npm run apply:yes` to wire GitHub sources (`rootDirectory: dify`, Dockerfile paths under `dify/`).
 4. Redeploy nginx, ssrf-proxy, and agent-ssrf-proxy from the connected repo.

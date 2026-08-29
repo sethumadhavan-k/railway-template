@@ -15,7 +15,7 @@ const DIFY_WEB_IMAGE = "langgenius/dify-web:1.17.0";
 
 /** GitHub monorepo containing dify/ (owner/repo). Required for template generation. */
 const TEMPLATE_REPO =
-  process.env.RAILWAY_TEMPLATE_REPO ?? "sethumadhavan/railway-template";
+  process.env.RAILWAY_TEMPLATE_REPO ?? "sethumadhavan-k/railway-template";
 
 const templateDockerService = (
   name: string,
