@@ -1,6 +1,5 @@
 import {
   defineRailway,
-  github,
   group,
   image,
   preserve,
@@ -12,25 +11,10 @@ import {
 
 const DIFY_API_IMAGE = "langgenius/dify-api:1.17.0";
 const DIFY_WEB_IMAGE = "langgenius/dify-web:1.17.0";
-
-/** GitHub monorepo containing dify/ (owner/repo). Required for template generation. */
-const TEMPLATE_REPO =
-  process.env.RAILWAY_TEMPLATE_REPO ?? "sethumadhavan-k/railway-template";
-
-const templateDockerService = (
-  name: string,
-  dockerfilePath: string,
-  config: Omit<Parameters<typeof service>[1], "source" | "rootDirectory" | "build">,
-) =>
-  service(name, {
-    source: github(TEMPLATE_REPO),
-    rootDirectory: "dify",
-    build: {
-      builder: "DOCKERFILE",
-      dockerfilePath,
-    },
-    ...config,
-  });
+const DIFY_NGINX_IMAGE = "ghcr.io/sethumadhavan-k/dify-nginx:1.17.0";
+const DIFY_SSRF_PROXY_IMAGE = "ghcr.io/sethumadhavan-k/dify-ssrf-proxy:1.17.0";
+const DIFY_AGENT_SSRF_PROXY_IMAGE =
+  "ghcr.io/sethumadhavan-k/dify-agent-ssrf-proxy:1.17.0";
 
 const varWithDescription = (value: string, description: string) => ({
   value,
@@ -341,7 +325,8 @@ export default defineRailway((ctx) => {
     },
   });
 
-  const ssrfProxy = templateDockerService("ssrf-proxy", "ssrf-proxy/Dockerfile", {
+  const ssrfProxy = service("ssrf-proxy", {
+    source: image(DIFY_SSRF_PROXY_IMAGE),
     env: {
       HTTP_PORT: varWithDescription("3128", "Squid HTTP proxy port."),
       COREDUMP_DIR: varWithDescription(
@@ -356,27 +341,24 @@ export default defineRailway((ctx) => {
     },
   });
 
-  const agentSsrfProxy = templateDockerService(
-    "agent-ssrf-proxy",
-    "agent-ssrf-proxy/Dockerfile",
-    {
-      env: {
-        HTTP_PORT: varWithDescription("3128", "Squid HTTP proxy port."),
-        COREDUMP_DIR: varWithDescription(
-          "/var/spool/squid",
-          "Squid coredump directory.",
-        ),
-        AGENT_BACKEND_HOST: varWithDescription(
-          "${{agent-backend.RAILWAY_PRIVATE_DOMAIN}}",
-          "Agent backend hostname for SSRF allowlist.",
-        ),
-        API_HOST: varWithDescription(
-          "${{dify-api.RAILWAY_PRIVATE_DOMAIN}}",
-          "API hostname for SSRF allowlist (/files/*).",
-        ),
-      },
+  const agentSsrfProxy = service("agent-ssrf-proxy", {
+    source: image(DIFY_AGENT_SSRF_PROXY_IMAGE),
+    env: {
+      HTTP_PORT: varWithDescription("3128", "Squid HTTP proxy port."),
+      COREDUMP_DIR: varWithDescription(
+        "/var/spool/squid",
+        "Squid coredump directory.",
+      ),
+      AGENT_BACKEND_HOST: varWithDescription(
+        "${{agent-backend.RAILWAY_PRIVATE_DOMAIN}}",
+        "Agent backend hostname for SSRF allowlist.",
+      ),
+      API_HOST: varWithDescription(
+        "${{dify-api.RAILWAY_PRIVATE_DOMAIN}}",
+        "API hostname for SSRF allowlist (/files/*).",
+      ),
     },
-  );
+  });
 
   // Railway healthchecks probe $PORT; set PORT to match the app listen port.
   const sandbox = service("sandbox", {
@@ -644,7 +626,8 @@ export default defineRailway((ctx) => {
     },
   });
 
-  const nginx = templateDockerService("nginx", "nginx/Dockerfile", {
+  const nginx = service("nginx", {
+    source: image(DIFY_NGINX_IMAGE),
     healthcheck: "/nginx-health",
     healthcheckTimeout: 600,
     env: {

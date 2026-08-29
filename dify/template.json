@@ -375,6 +375,7 @@
     },
     {
       "name": "ssrf-proxy",
+      "image": "ghcr.io/sethumadhavan-k/dify-ssrf-proxy:1.17.0",
       "variables": {
         "HTTP_PORT": {
           "defaultValue": "3128",
@@ -392,6 +393,7 @@
     },
     {
       "name": "agent-ssrf-proxy",
+      "image": "ghcr.io/sethumadhavan-k/dify-agent-ssrf-proxy:1.17.0",
       "variables": {
         "HTTP_PORT": {
           "defaultValue": "3128",
@@ -483,6 +485,7 @@
     },
     {
       "name": "nginx",
+      "image": "ghcr.io/sethumadhavan-k/dify-nginx:1.17.0",
       "healthcheckPath": "/nginx-health",
       "healthcheckTimeout": 600,
       "variables": {

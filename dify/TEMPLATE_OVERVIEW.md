@@ -35,18 +35,18 @@ After deploy:
 
 ### Publishing as a Railway template
 
-Railway cannot generate a template from services deployed with `railway up` (empty source). The custom **nginx**, **ssrf-proxy**, and **agent-ssrf-proxy** services must be connected to a **GitHub repo** before running `railway templates create`:
+All services use public Docker images (langgenius/* and GHCR gateway/SSRF images). Custom **nginx**, **ssrf-proxy**, and **agent-ssrf-proxy** images are built by GitHub Actions (`.github/workflows/publish-dify-images.yml`) and published to `ghcr.io/sethumadhavan-k/dify-*:1.17.0`.
 
-1. Push this monorepo to GitHub (default IaC repo: `sethumadhavan-k/railway-template`). Override with `RAILWAY_TEMPLATE_REPO=owner/repo` when applying IaC.
-2. Connect the repo to your Railway project (GitHub App access required).
-3. From `dify/`, run `npm run plan` then `npm run apply:yes` to wire GitHub sources (`rootDirectory: dify`, Dockerfile paths under `dify/`).
-4. Redeploy nginx, ssrf-proxy, and agent-ssrf-proxy from the connected repo.
-5. Create the template: `railway templates create --project <project-id> --environment production`
+After deploy, create the template:
+
+```bash
+railway templates create --project <project-id> --environment production
+```
 
 ## Dependencies for Dify Hosting
 
 - **Public domain on nginx** — Required for `CONSOLE_API_URL`, file URLs, and WebSocket endpoints
-- **GitHub repo with this template** — nginx and SSRF proxy images are built from this repo (set service root directory to `dify` in a monorepo)
+- **Public Docker images** — all services pull from Docker Hub / GHCR (no repo build required for template generation)
 - **External LLM API keys** — Railway is CPU-only; inference uses OpenAI, Anthropic, or other providers you configure in Dify
 - **Optional INIT_PASSWORD** — Protect the `/install` setup page on the **api** service
 
