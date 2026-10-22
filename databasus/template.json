@@ -2,20 +2,21 @@
   "services": [
     {
       "name": "databasus",
+      "image": "ghcr.io/databasus/databasus:v3.63.0",
       "healthcheckPath": "/api/v1/system/version",
       "healthcheckTimeout": 300,
       "variables": {
         "DATABASUS_ADMIN_EMAIL": {
           "defaultValue": "admin@example.com",
-          "description": "Administrator email created on first boot. Change at deploy time, then sign in with this address."
+          "description": "Used when deploying the Dockerfile bootstrap image from this folder. Marketplace image: create the first admin via Sign up instead."
         },
         "DATABASUS_ADMIN_PASSWORD": {
           "defaultValue": "${{secret(24, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
-          "description": "Administrator password (min 8 chars). Auto-generated; save from Variables after deploy."
+          "description": "Admin password for Dockerfile bootstrap deploys. Auto-generated; save from Variables after deploy."
         },
         "DATABASUS_DISABLE_SIGNUP": {
           "defaultValue": "true",
-          "description": "When true, open self-registration is turned off after the admin is created."
+          "description": "Dockerfile bootstrap only: close open registration after admin creation."
         },
         "DATABASUS_URL": {
           "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}",
