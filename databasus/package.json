@@ -1,0 +1,10 @@
+{
+  "name": "databasus",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "plan": "railway config plan",
+    "apply": "railway config apply",
+    "pull": "railway config pull"
+  }
+}
