@@ -16,8 +16,9 @@ export default defineRailway((ctx) => {
   const storage = volume("databasus-data");
   const backups = bucket("databasus-backups");
 
+  // Deploy from this directory (or GitHub rootDirectory databasus/) so Railway
+  // builds the local Dockerfile that wraps ghcr.io/databasus/databasus:v3.63.0.
   const databasus = service("databasus", {
-    // Deploy from this directory so Railway builds the local Dockerfile.
     healthcheck: "/api/v1/system/version",
     healthcheckTimeout: 300,
     volumeMounts: {
@@ -44,6 +45,7 @@ export default defineRailway((ctx) => {
         "true",
         "Disable anonymous usage telemetry.",
       ),
+      PORT: varWithDescription("4005", "HTTP listen port. Keep 4005 for Databasus."),
       S3_ENDPOINT: ref(backups, "ENDPOINT"),
       S3_BUCKET: ref(backups, "BUCKET"),
       S3_REGION: ref(backups, "REGION"),

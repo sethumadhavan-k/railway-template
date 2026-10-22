@@ -4,7 +4,7 @@
 
 ## About Hosting Databasus
 
-This template builds `ghcr.io/databasus/databasus:v3.63.0` with a thin Railway entrypoint. The app listens on port 4005 (or `PORT`). Metadata and the encryption key live in an embedded PostgreSQL 17 cluster on a volume at `/databasus-data`. On first boot the admin account is created from `DATABASUS_ADMIN_EMAIL` / `DATABASUS_ADMIN_PASSWORD`, and open sign-up is closed when `DATABASUS_DISABLE_SIGNUP=true`. A Railway Bucket (`databasus-backups`) supplies S3 credentials as `S3_*` variables for you to register as a storage destination in the UI.
+This template builds from the Dockerfile wrapping `ghcr.io/databasus/databasus:v3.63.0` with a thin `/app/main` entrypoint. The app listens on port 4005 (or `PORT`). Metadata and the encryption key live in an embedded PostgreSQL 17 cluster on a volume at `/databasus-data`. On first boot the admin account is created from `DATABASUS_ADMIN_EMAIL` / `DATABASUS_ADMIN_PASSWORD`, and open sign-up is closed when `DATABASUS_DISABLE_SIGNUP=true`. A Railway Bucket (`databasus-backups`) supplies S3 credentials as `S3_*` variables for you to register as a storage destination in the UI.
 
 ## Common Use Cases
 

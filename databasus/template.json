@@ -25,9 +25,13 @@
           "defaultValue": "true",
           "description": "Disable anonymous usage telemetry."
         },
+        "PORT": {
+          "defaultValue": "4005",
+          "description": "HTTP listen port. Keep 4005 for Databasus."
+        },
         "S3_ENDPOINT": {
           "defaultValue": "${{databasus-backups.ENDPOINT}}",
-          "description": "Railway Bucket S3 endpoint. Paste into Databasus → Storages → S3."
+          "description": "Railway Bucket S3 endpoint. Paste into Databasus \u2192 Storages \u2192 S3."
         },
         "S3_BUCKET": {
           "defaultValue": "${{databasus-backups.BUCKET}}",
