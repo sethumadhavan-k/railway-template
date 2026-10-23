@@ -6,48 +6,59 @@
       "healthcheckPath": "/api/v1/system/version",
       "healthcheckTimeout": 300,
       "variables": {
+        "PORT": {
+          "defaultValue": "4005",
+          "isOptional": true,
+          "description": "HTTP listen port. Databasus default is 4005."
+        },
         "DATABASUS_ADMIN_EMAIL": {
-          "defaultValue": "admin@example.com",
-          "description": "Used when deploying the Dockerfile bootstrap image from this folder. Marketplace image: create the first admin via Sign up instead."
+          "defaultValue": "",
+          "isOptional": true,
+          "description": "Optional. If set with DATABASUS_ADMIN_PASSWORD (Dockerfile bootstrap), creates this admin on first boot. Leave empty to use UI Sign up."
         },
         "DATABASUS_ADMIN_PASSWORD": {
-          "defaultValue": "${{secret(24, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
-          "description": "Admin password for Dockerfile bootstrap deploys. Auto-generated; save from Variables after deploy."
+          "defaultValue": "",
+          "isOptional": true,
+          "description": "Optional. Admin password for Dockerfile bootstrap (min 8 chars). Leave empty to skip bootstrap."
         },
         "DATABASUS_DISABLE_SIGNUP": {
           "defaultValue": "true",
-          "description": "Dockerfile bootstrap only: close open registration after admin creation."
-        },
-        "DATABASUS_URL": {
-          "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}",
-          "description": "Public base URL used in email links. Generate a Railway domain first."
+          "isOptional": true,
+          "description": "Optional. When bootstrap runs, close open registration (default true). Set false to leave sign-up open."
         },
         "IS_DISABLE_ANONYMOUS_TELEMETRY": {
           "defaultValue": "true",
-          "description": "Disable anonymous usage telemetry."
+          "isOptional": true,
+          "description": "Optional. Disable anonymous usage telemetry (default true). Upstream default is false."
         },
-        "PORT": {
-          "defaultValue": "4005",
-          "description": "HTTP listen port. Keep 4005 for Databasus."
+        "DATABASUS_URL": {
+          "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}",
+          "isOptional": true,
+          "description": "Optional. Public base URL used in email links."
         },
         "S3_ENDPOINT": {
           "defaultValue": "${{databasus-backups.ENDPOINT}}",
-          "description": "Railway Bucket S3 endpoint. Paste into Databasus \u2192 Storages \u2192 S3."
+          "isOptional": true,
+          "description": "Railway Bucket S3 endpoint. Paste into Databasus → Storages → S3."
         },
         "S3_BUCKET": {
           "defaultValue": "${{databasus-backups.BUCKET}}",
+          "isOptional": true,
           "description": "Railway Bucket name for backup archives."
         },
         "S3_REGION": {
           "defaultValue": "${{databasus-backups.REGION}}",
+          "isOptional": true,
           "description": "Railway Bucket region (often auto)."
         },
         "S3_ACCESS_KEY_ID": {
           "defaultValue": "${{databasus-backups.ACCESS_KEY_ID}}",
+          "isOptional": true,
           "description": "Railway Bucket access key id."
         },
         "S3_SECRET_ACCESS_KEY": {
           "defaultValue": "${{databasus-backups.SECRET_ACCESS_KEY}}",
+          "isOptional": true,
           "description": "Railway Bucket secret access key."
         }
       }

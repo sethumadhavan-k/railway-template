@@ -56,9 +56,10 @@ railway_bootstrap() {
   local email="${DATABASUS_ADMIN_EMAIL:-}"
   local password="${DATABASUS_ADMIN_PASSWORD:-}"
 
+  # Optional: skip bootstrap when credentials are unset (first admin via UI Sign up).
   if [ -z "${email}" ] || [ -z "${password}" ]; then
-    echo "railway: DATABASUS_ADMIN_EMAIL and DATABASUS_ADMIN_PASSWORD are required" >&2
-    return 1
+    echo "railway: DATABASUS_ADMIN_EMAIL/PASSWORD unset; skipping admin bootstrap"
+    return 0
   fi
 
   echo "railway: creating admin ${email} before the web server starts"

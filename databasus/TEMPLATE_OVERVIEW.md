@@ -8,7 +8,7 @@
 
 This template runs `ghcr.io/databasus/databasus:v3.63.0` on port 4005. Metadata and the encryption key live in an embedded PostgreSQL 17 cluster on a volume at `/databasus-data`. A Railway Bucket (`databasus-backups`) supplies S3 credentials as `S3_*` variables for you to register as a storage destination in the UI.
 
-This repo also includes a [Dockerfile](Dockerfile) + [entrypoint.sh](entrypoint.sh) that create `DATABASUS_ADMIN_EMAIL` / `DATABASUS_ADMIN_PASSWORD` on first boot and close open sign-up. Use that image when deploying from this directory (or set the service root to `databasus/` on the GitHub repo) for a closed-by-default admin.
+This repo also includes a [Dockerfile](Dockerfile) + [entrypoint.sh](entrypoint.sh). If you set optional `DATABASUS_ADMIN_EMAIL` and `DATABASUS_ADMIN_PASSWORD`, first boot creates that admin and closes sign-up (`DATABASUS_DISABLE_SIGNUP` defaults to `true`). Leave them empty to use normal UI Sign up.
 
 ## Common Use Cases
 
@@ -45,9 +45,9 @@ This repo also includes a [Dockerfile](Dockerfile) + [entrypoint.sh](entrypoint.
 4. Add a database (private host e.g. `postgres.railway.internal`, port 5432; SSL can stay off on the private network). Prefer accepting Databasus’s read-only user when offered.
 5. Save the encryption key: `railway ssh --service databasus -- cat /databasus-data/secret.key`. Encrypted backups cannot be restored without it if the volume is lost.
 
-**First login (Dockerfile bootstrap from this repo)**
+**First login (Dockerfile from this repo)**
 
-Sign in with `DATABASUS_ADMIN_EMAIL` / `DATABASUS_ADMIN_PASSWORD` from the Variables tab (open sign-up is already closed when `DATABASUS_DISABLE_SIGNUP=true`).
+If you set `DATABASUS_ADMIN_EMAIL` / `DATABASUS_ADMIN_PASSWORD`, sign in with those (sign-up is closed when `DATABASUS_DISABLE_SIGNUP=true`, the default). If those vars are empty, use UI Sign up like the marketplace image.
 
 Local volume storage works without the bucket, but watch volume size on Hobby. Prefer the bucket for off-site copies.
 

@@ -7,9 +7,13 @@ import {
   volume,
 } from "railway/iac";
 
-const varWithDescription = (value: string, description: string) => ({
+const optionalVar = (
+  value: string,
+  description: string,
+): { value: string; description: string; isOptional: true } => ({
   value,
   description,
+  isOptional: true,
 });
 
 export default defineRailway((ctx) => {
@@ -25,27 +29,27 @@ export default defineRailway((ctx) => {
       "/databasus-data": storage,
     },
     env: {
-      DATABASUS_ADMIN_EMAIL: varWithDescription(
-        "admin@example.com",
-        "Administrator email created on first boot. Change at deploy time, then sign in with this address.",
+      PORT: optionalVar("4005", "HTTP listen port. Databasus default is 4005."),
+      DATABASUS_ADMIN_EMAIL: optionalVar(
+        "",
+        "Optional. If set with DATABASUS_ADMIN_PASSWORD, creates this admin on first boot. Leave empty to use UI Sign up.",
       ),
-      DATABASUS_ADMIN_PASSWORD: varWithDescription(
-        ctx.randomString("admin-password", 24),
-        "Administrator password (min 8 chars). Auto-generated; save from Variables after deploy.",
+      DATABASUS_ADMIN_PASSWORD: optionalVar(
+        "",
+        "Optional. Admin password for Dockerfile bootstrap (min 8 chars). Leave empty to skip bootstrap.",
       ),
-      DATABASUS_DISABLE_SIGNUP: varWithDescription(
+      DATABASUS_DISABLE_SIGNUP: optionalVar(
         "true",
-        "When true, open self-registration is turned off after the admin is created.",
+        "Optional. When bootstrap runs, close open registration (default true).",
       ),
-      DATABASUS_URL: varWithDescription(
+      IS_DISABLE_ANONYMOUS_TELEMETRY: optionalVar(
+        "true",
+        "Optional. Disable anonymous usage telemetry (default true).",
+      ),
+      DATABASUS_URL: optionalVar(
         "https://${{RAILWAY_PUBLIC_DOMAIN}}",
-        "Public base URL used in email links. Generate a Railway domain first.",
+        "Optional. Public base URL used in email links.",
       ),
-      IS_DISABLE_ANONYMOUS_TELEMETRY: varWithDescription(
-        "true",
-        "Disable anonymous usage telemetry.",
-      ),
-      PORT: varWithDescription("4005", "HTTP listen port. Keep 4005 for Databasus."),
       S3_ENDPOINT: ref(backups, "ENDPOINT"),
       S3_BUCKET: ref(backups, "BUCKET"),
       S3_REGION: ref(backups, "REGION"),
