@@ -2,34 +2,17 @@
   "services": [
     {
       "name": "databasus",
-      "image": "ghcr.io/databasus/databasus:v3.63.0",
-      "healthcheckPath": "/api/v1/system/version",
-      "healthcheckTimeout": 300,
+      "icon": "https://raw.githubusercontent.com/databasus/databasus/main/assets/logo-square.svg",
       "variables": {
-        "PORT": {
-          "defaultValue": "4005",
-          "isOptional": true,
-          "description": "HTTP listen port. Databasus default is 4005."
-        },
         "DATABASUS_ADMIN_EMAIL": {
           "defaultValue": "",
-          "isOptional": true,
-          "description": "Optional. If set with DATABASUS_ADMIN_PASSWORD (Dockerfile bootstrap), creates this admin on first boot. Leave empty to use UI Sign up."
+          "isOptional": false,
+          "description": "Admin login email. Created on first boot; sign in with this account."
         },
         "DATABASUS_ADMIN_PASSWORD": {
           "defaultValue": "",
-          "isOptional": true,
-          "description": "Optional. Admin password for Dockerfile bootstrap (min 8 chars). Leave empty to skip bootstrap."
-        },
-        "DATABASUS_DISABLE_SIGNUP": {
-          "defaultValue": "true",
-          "isOptional": true,
-          "description": "Optional. When bootstrap runs, close open registration (default true). Set false to leave sign-up open."
-        },
-        "IS_DISABLE_ANONYMOUS_TELEMETRY": {
-          "defaultValue": "true",
-          "isOptional": true,
-          "description": "Optional. Disable anonymous usage telemetry (default true). Upstream default is false."
+          "isOptional": false,
+          "description": "Admin password (min 8 chars). Created on first boot."
         },
         "DATABASUS_URL": {
           "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}",

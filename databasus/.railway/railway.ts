@@ -16,6 +16,18 @@ const optionalVar = (
   isOptional: true,
 });
 
+const requiredVar = (
+  value: string,
+  description: string,
+): { value: string; description: string; isOptional: false } => ({
+  value,
+  description,
+  isOptional: false,
+});
+
+const DATABASUS_ICON =
+  "https://raw.githubusercontent.com/databasus/databasus/main/assets/logo-square.svg";
+
 export default defineRailway((ctx) => {
   const storage = volume("databasus-data");
   const backups = bucket("databasus-backups");
@@ -23,28 +35,18 @@ export default defineRailway((ctx) => {
   // Deploy from this directory (or GitHub rootDirectory databasus/) so Railway
   // builds the local Dockerfile that wraps ghcr.io/databasus/databasus:v3.63.0.
   const databasus = service("databasus", {
-    healthcheck: "/api/v1/system/version",
-    healthcheckTimeout: 300,
+    icon: DATABASUS_ICON,
     volumeMounts: {
       "/databasus-data": storage,
     },
     env: {
-      PORT: optionalVar("4005", "HTTP listen port. Databasus default is 4005."),
-      DATABASUS_ADMIN_EMAIL: optionalVar(
+      DATABASUS_ADMIN_EMAIL: requiredVar(
         "",
-        "Optional. If set with DATABASUS_ADMIN_PASSWORD, creates this admin on first boot. Leave empty to use UI Sign up.",
+        "Admin login email. Created on first boot; sign in with this account.",
       ),
-      DATABASUS_ADMIN_PASSWORD: optionalVar(
+      DATABASUS_ADMIN_PASSWORD: requiredVar(
         "",
-        "Optional. Admin password for Dockerfile bootstrap (min 8 chars). Leave empty to skip bootstrap.",
-      ),
-      DATABASUS_DISABLE_SIGNUP: optionalVar(
-        "true",
-        "Optional. When bootstrap runs, close open registration (default true).",
-      ),
-      IS_DISABLE_ANONYMOUS_TELEMETRY: optionalVar(
-        "true",
-        "Optional. Disable anonymous usage telemetry (default true).",
+        "Admin password (min 8 chars). Created on first boot.",
       ),
       DATABASUS_URL: optionalVar(
         "https://${{RAILWAY_PUBLIC_DOMAIN}}",

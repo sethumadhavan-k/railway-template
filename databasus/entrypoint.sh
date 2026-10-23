@@ -1,6 +1,7 @@
 #!/bin/bash
 # Installed as /app/main. Wraps main.real so the first server start provisions
-# an admin and optionally closes open registration before the web UI listens.
+# an admin from DATABASUS_ADMIN_EMAIL / DATABASUS_ADMIN_PASSWORD, then closes
+# open registration. Admins can re-enable sign-up in Databasus settings.
 set -eu
 
 readonly marker="/databasus-data/.railway-admin-bootstrapped"
@@ -12,21 +13,24 @@ if [ "$#" -gt 0 ]; then
   exec "${real_main}" "$@"
 fi
 
-railway_disable_signup() {
+railway_users_settings_dsn() {
   local dsn_file="/dev/shm/databasus-database-dsn"
-  local dsn=""
 
   if [ -n "${DATABASE_DSN:-}" ]; then
-    dsn="${DATABASE_DSN}"
+    echo "${DATABASE_DSN}"
   elif [ -f "${dsn_file}" ]; then
-    dsn="$(cat "${dsn_file}")"
+    cat "${dsn_file}"
   else
-    echo "railway: DATABASE_DSN missing; cannot disable sign-up" >&2
     return 1
   fi
+}
 
-  local host="localhost" port="5437" user="postgres" password="" dbname="databasus"
+railway_psql() {
+  local dsn host="localhost" port="5437" user="postgres" password="" dbname="databasus"
   local key value
+
+  dsn="$(railway_users_settings_dsn)" || return 1
+
   # shellcheck disable=SC2086
   for pair in ${dsn}; do
     key="${pair%%=*}"
@@ -43,8 +47,15 @@ railway_disable_signup() {
   PGPASSWORD="${password}" "${postgres_bin}/psql" \
     -X -q -1 -v ON_ERROR_STOP=1 \
     -h "${host}" -p "${port}" -U "${user}" -d "${dbname}" \
-    -c "INSERT INTO users_settings (is_allow_external_registrations) SELECT false WHERE NOT EXISTS (SELECT 1 FROM users_settings)" \
-    -c "UPDATE users_settings SET is_allow_external_registrations = false"
+    "$@"
+}
+
+railway_set_external_registrations() {
+  local allow="$1"
+
+  railway_psql \
+    -c "INSERT INTO users_settings (is_allow_external_registrations) SELECT ${allow} WHERE NOT EXISTS (SELECT 1 FROM users_settings)" \
+    -c "UPDATE users_settings SET is_allow_external_registrations = ${allow}"
 }
 
 railway_bootstrap() {
@@ -56,10 +67,9 @@ railway_bootstrap() {
   local email="${DATABASUS_ADMIN_EMAIL:-}"
   local password="${DATABASUS_ADMIN_PASSWORD:-}"
 
-  # Optional: skip bootstrap when credentials are unset (first admin via UI Sign up).
   if [ -z "${email}" ] || [ -z "${password}" ]; then
-    echo "railway: DATABASUS_ADMIN_EMAIL/PASSWORD unset; skipping admin bootstrap"
-    return 0
+    echo "railway: DATABASUS_ADMIN_EMAIL and DATABASUS_ADMIN_PASSWORD are required" >&2
+    return 1
   fi
 
   echo "railway: creating admin ${email} before the web server starts"
@@ -68,13 +78,11 @@ railway_bootstrap() {
     return 1
   fi
 
-  if [ "${DATABASUS_DISABLE_SIGNUP:-true}" = "true" ]; then
-    if ! railway_disable_signup; then
-      echo "railway: could not turn off sign-up; set DATABASUS_DISABLE_SIGNUP=false to skip" >&2
-      return 1
-    fi
-    echo "railway: open sign-up turned off"
+  if ! railway_set_external_registrations false; then
+    echo "railway: could not turn off external registration" >&2
+    return 1
   fi
+  echo "railway: external registration disabled (enable in Databasus settings if needed)"
 
   touch "${marker}"
   echo "railway: bootstrap complete"
